@@ -30,14 +30,24 @@ def initialize():
  finally:c.close()
 
 def list_cases():
- c,pg=connection()
- try:return [dict(zip(('id','name','updated'),row)) for row in c.execute('SELECT id,name,updated FROM cases ORDER BY updated DESC').fetchall()]
- finally:c.close()
+ try:
+  c,pg=connection()
+  try:return [dict(zip(('id','name','updated'),row)) for row in c.execute('SELECT id,name,updated FROM cases ORDER BY updated DESC').fetchall()]
+  finally:c.close()
+ except sqlite3.OperationalError:
+  initialize()
+  c,pg=connection()
+  try:return [dict(zip(('id','name','updated'),row)) for row in c.execute('SELECT id,name,updated FROM cases ORDER BY updated DESC').fetchall()]
+  finally:c.close()
 
 def get_case(ident):
- c,pg=connection()
- try:row=c.execute('SELECT data FROM cases WHERE id='+('%s' if pg else '?'),(ident,)).fetchone();return json.loads(row[0]) if row else None
- finally:c.close()
+ try:
+  c,pg=connection()
+  try:row=c.execute('SELECT data FROM cases WHERE id='+('%s' if pg else '?'),(ident,)).fetchone();return json.loads(row[0]) if row else None
+  finally:c.close()
+ except sqlite3.OperationalError:
+  initialize()
+  return None
 
 def save_case(data,analysis):
  name=data['name'].strip(); ident=data.get('id');now=datetime.datetime.now(datetime.timezone.utc).isoformat();c,pg=connection();q='%s' if pg else '?'
@@ -50,10 +60,26 @@ def save_case(data,analysis):
    elif pg:ident=c.execute(f'INSERT INTO cases(name,data,updated,snapshot) VALUES({q},{q},{q},{q}) RETURNING id',(name,json.dumps(data),now,snapshot)).fetchone()[0]
    else:ident=c.execute(f'INSERT INTO cases(name,data,updated,snapshot) VALUES({q},{q},{q},{q})',(name,json.dumps(data),now,snapshot)).lastrowid
   return ident
+ except sqlite3.OperationalError:
+  initialize()
+  c2,pg2=connection()
+  try:
+   with c2:
+    if ident:
+     cur=c2.execute(f'UPDATE cases SET name={q},data={q},updated={q},snapshot={q} WHERE id={q}',(name,json.dumps(data),now,snapshot,ident))
+     if not cur.rowcount: return None
+    elif pg2:ident=c2.execute(f'INSERT INTO cases(name,data,updated,snapshot) VALUES({q},{q},{q},{q}) RETURNING id',(name,json.dumps(data),now,snapshot)).fetchone()[0]
+    else:ident=c2.execute(f'INSERT INTO cases(name,data,updated,snapshot) VALUES({q},{q},{q},{q})',(name,json.dumps(data),now,snapshot)).lastrowid
+   return ident
+  finally:c2.close()
  finally:c.close()
 
 def delete_case(ident):
- c,pg=connection()
  try:
-  with c:return bool(c.execute('DELETE FROM cases WHERE id='+('%s' if pg else '?'),(ident,)).rowcount)
- finally:c.close()
+  c,pg=connection()
+  try:
+   with c:return bool(c.execute('DELETE FROM cases WHERE id='+('%s' if pg else '?'),(ident,)).rowcount)
+  finally:c.close()
+ except sqlite3.OperationalError:
+  initialize()
+  return False
