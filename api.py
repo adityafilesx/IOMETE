@@ -16,7 +16,16 @@ from reports import build_report
 import exports
 import repository
 
+from contextlib import asynccontextmanager
+
 ROOT=Path(__file__).resolve().parent
+
+@asynccontextmanager
+async def lifespan(app_instance: FastAPI):
+    if os.environ.get('VERCEL'):
+        try: repository.initialize()
+        except Exception: pass
+    yield
 
 class VercelPathFixMiddleware:
     """Restores client request path if Vercel serverless rewrites point scope['path'] to the script file."""
@@ -43,7 +52,7 @@ class VercelPathFixMiddleware:
                         scope['path'] = raw_path[:-3]
         await self.asgi_app(scope, receive, send)
 
-app=FastAPI(title='ProofDesk local API', redirect_slashes=False)
+app=FastAPI(title='ProofDesk local API', redirect_slashes=False, lifespan=lifespan)
 app.add_middleware(VercelPathFixMiddleware)
 
 @app.middleware('http')
@@ -123,12 +132,6 @@ app.include_router(router, prefix='/api')
 app.include_router(router, prefix='')
 
 FRONTEND=ROOT/'frontend'/'dist'
-@app.on_event('startup')
-def startup_init():
- if os.environ.get('VERCEL'):
-  try: repository.initialize()
-  except Exception: pass
-
 app.mount('/',StaticFiles(directory=FRONTEND if (FRONTEND/'index.html').exists() else ROOT/'static',html=True),name='static')
 if __name__=='__main__':
  import sys
