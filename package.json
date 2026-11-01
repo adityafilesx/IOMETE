@@ -1,0 +1,9 @@
+{
+  "name": "iomete-proofdesk",
+  "version": "0.1.0",
+  "private": true,
+  "description": "ProofDesk - Technical fit assessment & auditable business case builder",
+  "scripts": {
+    "build": "cd frontend && npm install && npm run build"
+  }
+}

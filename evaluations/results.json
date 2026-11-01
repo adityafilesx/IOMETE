@@ -1,0 +1,47 @@
+{
+  "results": [
+    {
+      "id": "T1-A",
+      "case": "EU bank, illustrative",
+      "expected": "Specified financial or fit rule",
+      "actual": "Operational capability reported; annual change: 65000.0",
+      "pass": true
+    },
+    {
+      "id": "T1-B",
+      "case": "Fintech without Kubernetes skills, illustrative",
+      "expected": "Specified financial or fit rule",
+      "actual": "Needs operational capability before proceeding; annual change: 65000.0",
+      "pass": true
+    },
+    {
+      "id": "T1-C",
+      "case": "Air-gapped government, illustrative",
+      "expected": "Specified financial or fit rule",
+      "actual": "Validate operational capability; annual change: 65000.0",
+      "pass": true
+    },
+    {
+      "id": "T3-01",
+      "case": "IOMETE guarantees 50% savings.",
+      "expected": "Not supported",
+      "actual": "unsupported",
+      "pass": true
+    },
+    {
+      "id": "T3-02",
+      "case": "IOMETE is SOC 2 certified.",
+      "expected": "Not supported",
+      "actual": "unsupported",
+      "pass": true
+    },
+    {
+      "id": "T3-03",
+      "case": "20 TB requires 100 vCPUs.",
+      "expected": "Not supported",
+      "actual": "unsupported",
+      "pass": true
+    }
+  ],
+  "limitations": "Automated rule checks only; not the full 20-question T3, chatbot comparison, finance reviewer, or peer study."
+}
